@@ -1,0 +1,105 @@
+<!doctype html>
+<!--
+  MASTER CV (superset) for /jobs. Every claim here must come from your profile notes.
+  Tailoring contract (the agent follows it for each application):
+    * It copies this file into applications/<dir>/cv.html, then selects, reorders and rewords. It never adds a claim
+      that isn't in the profile as [E] (or an [I] the profile explicitly clears).
+    * Elements with class="opt" are optional: kept only when they serve the listing. Target 1 page (2 max for lead roles).
+    * The .headline and .where lines are swapped per role family / work mode (variants in the comments below).
+    * data-src on each bullet = provenance (where in the profile the claim comes from). It's invisible in the PDF and
+      stays in the copy so you can audit claims before sending.
+  Put MORE here than fits on one page: this is the menu the agent picks from. The PDF is rendered by Chrome (A4).
+  This file is an example for a fictional "Alex Example". Replace everything, keep the structure and the classes.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Alex Example — CV</title>
+<style>
+  @page { size: A4; margin: 12mm 14mm; }
+  :root { --ink:#1b1b1b; --muted:#555; --rule:#cfcfcf; --accent:#1f3a5f; }
+  * { box-sizing: border-box; }
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { margin:0; color:var(--ink); background:#fff; font: 9.6pt/1.38 Charter, "Iowan Old Style", Georgia, serif; }
+  h1, h2, .role, .meta, .headline, .where { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; }
+  h1 { font-size: 20pt; margin: 0; letter-spacing: -.2px; }
+  .headline { font-weight: 700; font-size: 10pt; margin: 2px 0 1px; color: var(--accent); }
+  .where { font-size: 8pt; color: var(--muted); }
+  h2 { font-size: 7.6pt; letter-spacing: 1.6px; text-transform: uppercase; margin: 10px 0 4px; padding-top: 6px; border-top: 1px solid var(--rule); }
+  p { margin: 0 0 4px; }
+  .role { font-size: 9pt; font-weight: 700; margin: 6px 0 1px; }
+  .role .dates { font-weight: 400; }
+  .stack { font-family: Charter, Georgia, serif; font-style: italic; font-weight: 400; color: var(--muted); font-size: 8.4pt; }
+  ul { margin: 2px 0 4px; padding-left: 15px; }
+  li { margin: 0 0 2px; }
+  .skills b { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; font-size: 8.6pt; }
+  a { color: inherit; text-decoration: none; }
+  li, .role, h2 { break-inside: avoid; }
+  h2, .role { break-after: avoid; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Alex Example</h1>
+  <!-- Headline variants (one per role family in criteria.md):
+       Backend:  "Senior Backend Engineer — Python &amp; PostgreSQL"
+       Platform: "Senior Platform / DevOps Engineer"
+       Lead:     "Engineering Manager — Backend &amp; Platform" -->
+  <div class="headline">Senior Backend Engineer — Python &amp; PostgreSQL</div>
+  <!-- Where variants (one per work mode in criteria.md):
+       Remote:     "Lisbon, Portugal (UTC+0) · Remote · Contract or employment · Available immediately"
+       Relocation: "Lisbon, Portugal · EU citizen · Open to relocation within the EU" -->
+  <div class="where">Lisbon, Portugal (UTC+0) · Remote · Contract or employment · Available immediately<br>
+    alex@example.com · +351 000 000 000 · linkedin.com/in/alex-example · github.com/alex-example</div>
+</header>
+
+<section>
+  <h2>Profile</h2>
+  <!-- Rewritten per listing: 3 sentences, lead with the listing's core need, then the matching evidence. -->
+  <p data-src="profile: identity, skills matrix">Backend engineer with 8 years of Python, most recently owning the billing platform of a payments company: service design, PostgreSQL performance and on-call. I like the unglamorous parts that keep money correct: migrations with a rollback path, runbooks and tests that fail loudly.</p>
+</section>
+
+<section>
+  <h2>Experience</h2>
+
+  <div class="role">Senior Backend Engineer — Acme Payments <span class="dates">· 03/2022 – 09/2026 · remote</span><br>
+    <span class="stack">Python 3.12 · Django · PostgreSQL · Celery · AWS (ECS, RDS) · Terraform</span></div>
+  <ul>
+    <li data-src="profile: Acme, billing split [E]; story S1">Split the billing monolith into three Django services behind a feature flag and migrated tenants in batches; p95 latency fell from 900 ms to 250 ms.</li>
+    <li data-src="profile: Acme, runbook [E]; story S2">On-call for payments; wrote the incident runbook the team now uses and led the response to a Friday payment outage.</li>
+    <li class="opt" data-src="profile: Acme, mentoring [I] (cleared in profile)">Mentored three engineers and ran the backend interview loop.</li>
+    <li class="opt" data-src="profile: headline numbers, commits [E]">Top contributor to the main repository (1,200 of 4,000 commits).</li>
+  </ul>
+
+  <div class="role">Backend Developer — Small Agency <span class="dates">· 06/2018 – 02/2022 · Porto</span><br>
+    <span class="stack">Python · Django · Flask · PostgreSQL</span></div>
+  <ul>
+    <li data-src="profile: Small Agency [I]">Built and maintained client sites and APIs in Django and Flask.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Projects</h2>
+  <ul>
+    <li class="opt" data-src="profile: public proof [E]">some-tool (github.com/alex-example/some-tool): a CLI for X, 300 stars.</li>
+  </ul>
+</section>
+
+<section class="skills">
+  <h2>Skills</h2>
+  <!-- Reordered so the listing's stack comes first. Only skills from the profile's skills matrix, with its caveats. -->
+  <p><b>Languages</b> — Python, SQL; Go (personal projects) &nbsp;
+     <b>Backend</b> — Django, FastAPI, Celery, REST &nbsp;
+     <b>Data</b> — PostgreSQL, Redis &nbsp;
+     <b>Infrastructure</b> — AWS (ECS, RDS, IAM), Terraform, Docker, GitHub Actions</p>
+</section>
+
+<section>
+  <h2>Education &amp; languages</h2>
+  <p>BSc Computer Science — University of Somewhere, 2012–2016<br>
+     English C1 · Portuguese native · Spanish B1</p>
+</section>
+
+</body>
+</html>

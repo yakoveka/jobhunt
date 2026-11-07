@@ -1,0 +1,46 @@
+# Job sources + mechanical prefilter for `jobhunt.py fetch`.
+# The prefilter only throws out the obvious misses; judgement (fit, seniority, salary realism) is the agent's job
+# (criteria.md). Keep these filters LOOSE: a listing dropped here is never seen again.
+# Regexes are Python `re`, matched case-insensitively. Test a change with `jobhunt.py fetch` and read the
+# per-source "rejected=" counts.
+#
+# Add a company that uses an ATS only after its feed returns jobs in a browser:
+#   greenhouse: https://boards-api.greenhouse.io/v1/boards/<org>/jobs
+#   ashby:      https://api.ashbyhq.com/posting-api/job-board/<org>
+#   lever:      https://api.lever.co/v0/postings/<org>?mode=json
+# Terms: RemoteOK and Remotive ask for attribution when jobs are republished (this tool doesn't republish);
+# Remotive allows at most 4 fetches a day.
+
+max_age_days = 14               # board listings older than this are skipped
+max_age_days_ats = 45           # company ATS listings
+salary_floor_usd_year = 40000   # only applied when a listing has a structured annual USD salary
+
+[filters]
+# The title must match title_role and must not match title_exclude.
+title_role = '''engineer|developer|programmer|\bcto\b|head of (engineering|technology|platform)|tech(nical)? lead|team lead|architect|devops|\bsre\b|site reliability'''
+title_exclude = '''junior|\bintern|internship|graduate|trainee|entry[- ]level|\bjr\b|designer|sales|account (executive|manager)|marketing|recruit|customer success|support engineer|solutions? engineer|\bqa\b|sdet|hardware|embedded|firmware|electrical|mechanical'''
+# At least one of these must appear in the title, tags or description: your stack and role words.
+stack = '''python|django|fastapi|flask|postgres|back[- ]?end|full[- ]?stack|devops|platform|infrastructure|\bsre\b|docker|terraform|\baws\b'''
+# Locations you can't work from (when they come without sponsorship). Board listings that match are dropped.
+location_exclude = '''\b(us|usa|u\.s\.)[- ]?(only|based)\b|united states only|must (be|reside) in the (us|u\.s\.|united states)|us citizens?|\b(canada|latam|apac|india|uk|australia) only\b'''
+# Company ATS feeds list on-site jobs everywhere, so an ATS listing needs one of these in its location...
+location_allow = '''remote|anywhere|worldwide|distributed|europe|emea|\beu\b|portugal|lisbon|spain|netherlands'''
+# ...or one of these in its text.
+text_allow = '''relocat|visa sponsor|sponsorship|work from anywhere'''
+
+[boards]
+# Set a board to false or [] to turn it off.
+remoteok = true
+himalayas_queries = ["python", "django", "backend", "devops", "platform engineer"]
+wwr_categories = ["remote-back-end-programming-jobs", "remote-full-stack-programming-jobs", "remote-devops-sysadmin-jobs"]
+remotive_categories = ["software-dev", "devops"]
+workingnomads = true
+jobicy_industries = ["dev"]
+hn = true                       # Hacker News "Who is hiring", latest monthly thread
+habr_queries = []               # Habr Career (Russian-speaking market), e.g. ["python", "devops"]
+
+[ats]
+# Companies whose public ATS feeds are read directly. Grow this list via /jobs weekly; drop orgs that never match.
+greenhouse = ["gitlab", "cloudflare", "elastic", "grafanalabs", "mozilla", "wikimedia", "canonical", "vercel"]
+ashby = ["posthog", "supabase", "linear", "sentry", "zapier", "railway"]
+lever = []

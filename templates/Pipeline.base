@@ -1,0 +1,116 @@
+filters:
+  and:
+    - file.path.contains("applications/")
+    - file.name == "job"
+formulas:
+  application: file.asLink(note.company)
+  days_since_applied: if(note.applied && note.applied != "unknown", (today() - date(note.applied)).days, "")
+properties:
+  formula.application:
+    displayName: Application
+  note.role:
+    displayName: Role
+  note.status:
+    displayName: Status
+  note.reached:
+    displayName: Reached
+  note.applied:
+    displayName: Applied
+  formula.days_since_applied:
+    displayName: Days since
+  note.next_action:
+    displayName: Next action
+  note.next_action_date:
+    displayName: Due
+  note.score:
+    displayName: Score
+  note.source:
+    displayName: Source
+  note.updated:
+    displayName: Updated
+views:
+  - type: kanban-view
+    name: Kanban
+    order:
+      - role
+      - applied
+      - next_action_date
+      - score
+    groupByProperty: note.status
+    cardTitleProperty: note.company
+    columnOrders:
+      note.status:
+        - drafted
+        - sent
+        - screen
+        - interview
+        - offer
+        - rejected
+        - ghosted
+        - withdrawn
+        - skipped
+        - Uncategorized
+    columnColors:
+      note.status:
+        drafted: yellow
+        sent: blue
+        screen: cyan
+        interview: purple
+        offer: green
+        rejected: red
+    cardOrders:
+      note.status: {}
+  - type: table
+    name: Active
+    filters:
+      or:
+        - note.status == "drafted"
+        - note.status == "sent"
+        - note.status == "screen"
+        - note.status == "interview"
+        - note.status == "offer"
+    order:
+      - formula.application
+      - role
+      - status
+      - applied
+      - formula.days_since_applied
+      - next_action
+      - next_action_date
+      - score
+    sort:
+      - property: next_action_date
+        direction: ASC
+  - type: table
+    name: Follow-ups due
+    filters:
+      and:
+        - note.next_action_date
+        - date(note.next_action_date) <= today()
+        - note.status != "rejected"
+        - note.status != "ghosted"
+        - note.status != "withdrawn"
+        - note.status != "skipped"
+    order:
+      - formula.application
+      - status
+      - next_action
+      - next_action_date
+      - applied
+    sort:
+      - property: next_action_date
+        direction: ASC
+  - type: table
+    name: All
+    order:
+      - formula.application
+      - role
+      - status
+      - reached
+      - applied
+      - score
+      - source
+      - updated
+    sort:
+      - property: updated
+        direction: DESC

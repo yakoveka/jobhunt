@@ -1,0 +1,12 @@
+# Personal data never lives in this repo; these guard against a hunt dir created inside it by mistake.
+/daily/
+/applications/
+/market/
+/profile/
+/criteria.md
+/sources.toml
+/cv-master.html
+/dashboard.md
+*.pdf
+.DS_Store
+__pycache__/
