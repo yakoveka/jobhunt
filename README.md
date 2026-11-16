@@ -53,7 +53,7 @@ The tracker is the frontmatter of each `applications/*/job.md` (`status: drafted
 
 ## Sources
 
-RemoteOK, Himalayas, We Work Remotely, Remotive, Working Nomads, Jobicy, Hacker News "Who is hiring", Habr Career (Russian-speaking market, off by default), and the public Greenhouse / Ashby / Lever job feeds of any companies you list. LinkedIn isn't included: its terms forbid scraping. To add a source, write a `src_*` function in `jobhunt.py`, with a test.
+RemoteOK, Himalayas, We Work Remotely, Remotive, Working Nomads, Jobicy, Hacker News "Who is hiring", Habr Career (Russian-speaking market, off by default), and the public Greenhouse / Ashby / Lever / Workable job feeds of any companies you list. LinkedIn isn't included: its terms forbid scraping. To add a source, write a `src_*` function in `jobhunt.py`, with a test.
 
 Respect each source's terms: RemoteOK and Remotive ask for attribution if you republish listings (this tool doesn't), and Remotive allows at most 4 fetches a day.
 

@@ -15,7 +15,7 @@ Short excerpts of your own writing (or paths to them).
 ## Rules for drafts
 1. Open with context: why this company and this role, in one concrete sentence. Never "I am writing to apply…"
 2. One concrete piece of evidence per paragraph (a number, a system, a result)
-3. Be candid about one real gap and how you'd close it
+3. No gap statements ("I haven't…", "one gap"): gaps and how you'd frame them go in `fit.md` for the screening call
 4. Plain words; short and long sentences mixed; no buzzword chains
 5. End with availability and a simple next step
 

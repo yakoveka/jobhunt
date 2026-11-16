@@ -8,11 +8,12 @@
 #   greenhouse: https://boards-api.greenhouse.io/v1/boards/<org>/jobs
 #   ashby:      https://api.ashbyhq.com/posting-api/job-board/<org>
 #   lever:      https://api.lever.co/v0/postings/<org>?mode=json
+#   workable:   https://apply.workable.com/api/v1/widget/accounts/<slug>?details=true
 # Terms: RemoteOK and Remotive ask for attribution when jobs are republished (this tool doesn't republish);
 # Remotive allows at most 4 fetches a day.
 
 max_age_days = 14               # board listings older than this are skipped
-max_age_days_ats = 45           # company ATS listings
+max_age_days_ats = 3650         # company ATS listings: effectively off, a role still on a company's own board is open
 salary_floor_usd_year = 40000   # only applied when a listing has a structured annual USD salary
 
 [filters]
@@ -31,7 +32,10 @@ text_allow = '''relocat|visa sponsor|sponsorship|work from anywhere'''
 [boards]
 # Set a board to false or [] to turn it off.
 remoteok = true
-himalayas_queries = ["python", "django", "backend", "devops", "platform engineer"]
+# Two-letter country code: only jobs open to that country (worldwide ones included), up to 10 pages per query.
+# Without it each query reads the newest unfiltered rows, mostly locked to other countries.
+himalayas_country = "PT"
+himalayas_queries =["python", "django", "backend", "devops", "platform engineer"]
 wwr_categories = ["remote-back-end-programming-jobs", "remote-full-stack-programming-jobs", "remote-devops-sysadmin-jobs"]
 remotive_categories = ["software-dev", "devops"]
 workingnomads = true
@@ -44,3 +48,4 @@ habr_queries = []               # Habr Career (Russian-speaking market), e.g. ["
 greenhouse = ["gitlab", "cloudflare", "elastic", "grafanalabs", "mozilla", "wikimedia", "canonical", "vercel"]
 ashby = ["posthog", "supabase", "linear", "sentry", "zapier", "railway"]
 lever = []
+workable = []

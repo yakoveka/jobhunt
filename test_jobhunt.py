@@ -6,6 +6,8 @@ import os
 import sys
 import tempfile
 import unittest
+import unittest.mock
+import urllib.error
 from pathlib import Path
 
 sys.dont_write_bytecode = True
@@ -123,6 +125,39 @@ class TestNormalizers(unittest.TestCase):
         get = FakeGet({"himalayas.app": {"jobs": [{"title": "Dev", "companyName": "A", "locationRestrictions": [],
                                                     "guid": "g", "pubDate": 1793485525}]}})
         self.assertEqual(jh.src_himalayas(CFG, get)[0]["location"], "Worldwide")
+
+    def test_himalayas_country_filter_and_paging(self):
+        def row(i):
+            return {"title": f"Backend {i}", "companyName": "A", "guid": f"g{i}", "pubDate": 1793485525}
+        pages = {"page=1": {"jobs": [row(i) for i in range(20)]}, "page=2": {"jobs": [row(i) for i in range(20, 25)]}}
+        get = FakeGet(pages)
+        cfg = {**CFG, "boards": {**CFG["boards"], "himalayas_queries": ["php"], "himalayas_country": "GE"}}
+        with unittest.mock.patch.object(jh, "HIMALAYAS_PAUSE_S", 0):
+            jobs = jh.src_himalayas(cfg, get)
+        self.assertEqual(len(jobs), 25)
+        self.assertEqual(len(get.calls), 2, "a short page ends the query")
+        self.assertTrue(all("country=GE" in u for u in get.calls))
+
+    def test_himalayas_page_cap(self):
+        full = {"jobs": [{"title": "B", "companyName": "A", "guid": f"g{i}", "pubDate": 1} for i in range(20)]}
+        get = FakeGet({"himalayas.app": full})
+        with unittest.mock.patch.object(jh, "HIMALAYAS_PAUSE_S", 0):
+            jh.src_himalayas(CFG, get)
+        self.assertEqual(len(get.calls), jh.HIMALAYAS_MAX_PAGES)
+        self.assertNotIn("country=", get.calls[0], "no country filter unless configured")
+
+    def test_himalayas_waits_and_retries_once_on_429(self):
+        calls = []
+
+        def get(url):
+            calls.append(url)
+            if len(calls) == 1:
+                raise urllib.error.HTTPError(url, 429, "Too Many Requests", {}, None)
+            return json.dumps({"jobs": [{"title": "B", "companyName": "A", "guid": "g", "pubDate": 1}]}).encode()
+        with unittest.mock.patch.object(jh, "HIMALAYAS_PAUSE_S", 0), \
+                unittest.mock.patch.object(jh, "HIMALAYAS_429_WAIT_S", 0):
+            self.assertEqual(len(jh.src_himalayas(CFG, get)), 1)
+        self.assertEqual(len(calls), 2)
 
     def test_wwr_rss_splits_company_from_title(self):
         get = FakeGet({"weworkremotely.com": RSS})
@@ -266,6 +301,23 @@ class TestRun(unittest.TestCase):
             jh.run(CFG, state, TODAY, get=None, sources=sources)
             later = jh.run(CFG, state, TODAY + dt.timedelta(days=jh.SEEN_TTL_DAYS + 1), get=None, sources=sources)
             self.assertEqual(later["new"], 1)
+
+    def test_workable_merges_one_row_per_country_into_one_job(self):
+        row = {"shortcode": "E09695A", "title": "SRE Observability Engineer", "telecommuting": True,
+               "url": "https://apply.workable.com/j/E09695A", "published_on": "2026-10-16",
+               "description": "<p>Prometheus &amp; Grafana</p>", "city": ""}
+        other = {**row, "shortcode": "ZZ1", "title": "Accountant", "telecommuting": False, "country": "Kazakhstan"}
+        get = FakeGet({"apply.workable.com/api/v1/widget/accounts/etg": {"name": "Emerging Travel Group", "jobs": [
+            {**row, "country": "Vietnam"}, {**row, "country": "Georgia"}, {**row, "country": "Vietnam"}, other]}})
+        jobs = jh.src_workable({**CFG, "ats": {"workable": ["etg"]}}, get)
+        self.assertEqual([j["id"] for j in jobs], ["workable:etg:E09695A", "workable:etg:ZZ1"])
+        sre = jobs[0]
+        self.assertEqual(sre["kind"], "ats")
+        self.assertEqual(sre["company"], "Emerging Travel Group")
+        self.assertEqual(sre["location"], "Vietnam, Georgia (remote)")
+        self.assertEqual(sre["posted"], "2026-10-16")
+        self.assertEqual(sre["description"], "Prometheus & Grafana")
+        self.assertEqual(jobs[1]["location"], "Kazakhstan")
 
     def test_enabled_sources_follow_config(self):
         cfg = json.loads(json.dumps(CFG))
