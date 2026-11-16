@@ -32,6 +32,7 @@ import subprocess
 import sys
 import time
 import tomllib
+import urllib.error
 import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
@@ -191,22 +192,53 @@ def src_remoteok(cfg, get: Get) -> list[Job]:
     return out
 
 
+HIMALAYAS_PAGE = 20        # fixed page size of the search endpoint
+HIMALAYAS_MAX_PAGES = 10
+# Keyless callers share one allowance: 0.4 s between calls hit 429 after ~40 requests (2026-11-16).
+HIMALAYAS_PAUSE_S = 1.5
+HIMALAYAS_429_WAIT_S = 30
+
+
+def _himalayas_page(get: Get, url: str) -> dict:
+    try:
+        return get_json(get, url)
+    except urllib.error.HTTPError as e:
+        if e.code != 429:
+            raise
+        time.sleep(HIMALAYAS_429_WAIT_S)
+        return get_json(get, url)
+
+
 def src_himalayas(cfg, get: Get) -> list[Job]:
+    """Search each query, newest first, up to HIMALAYAS_MAX_PAGES pages. `himalayas_country` limits results to
+    jobs open to that country (worldwide ones included); without it one page of a broad query is under a day."""
     out = []
+    country = cfg["boards"].get("himalayas_country")
+    calls = 0
     for q in cfg["boards"].get("himalayas_queries", []):
-        url = "https://himalayas.app/jobs/api/search?" + urllib.parse.urlencode({"q": q, "sort": "recent"})
-        for r in get_json(get, url).get("jobs", []):
-            cur = r.get("currency") or "USD"
-            lo, hi = usd_range(r.get("minSalary"), r.get("maxSalary"), cur)
-            out.append(mk("himalayas", "board", r.get("guid"), title=r.get("title", ""),
-                          company=r.get("companyName", ""),
-                          location=", ".join(r.get("locationRestrictions") or []) or "Worldwide",
-                          url=r.get("guid") or r.get("applicationLink", ""), posted=iso_date(r.get("pubDate")),
-                          salary=salary_text(r.get("minSalary"), r.get("maxSalary"), cur),
-                          salary_min_usd=lo, salary_max_usd=hi,
-                          tags=(r.get("categories") or []) + (r.get("seniority") or []),
-                          description=text(r.get("description") or r.get("excerpt"))))
+        for page in range(1, HIMALAYAS_MAX_PAGES + 1):
+            params = {"q": q, "sort": "recent", "page": page} | ({"country": country} if country else {})
+            if calls:
+                time.sleep(HIMALAYAS_PAUSE_S)
+            calls += 1
+            url = "https://himalayas.app/jobs/api/search?" + urllib.parse.urlencode(params)
+            rows = _himalayas_page(get, url).get("jobs", [])
+            out += [_himalayas_job(r) for r in rows]
+            if len(rows) < HIMALAYAS_PAGE:
+                break
     return out
+
+
+def _himalayas_job(r: dict) -> Job:
+    cur = r.get("currency") or "USD"
+    lo, hi = usd_range(r.get("minSalary"), r.get("maxSalary"), cur)
+    return mk("himalayas", "board", r.get("guid"), title=r.get("title", ""), company=r.get("companyName", ""),
+              location=", ".join(r.get("locationRestrictions") or []) or "Worldwide",
+              url=r.get("guid") or r.get("applicationLink", ""), posted=iso_date(r.get("pubDate")),
+              salary=salary_text(r.get("minSalary"), r.get("maxSalary"), cur),
+              salary_min_usd=lo, salary_max_usd=hi,
+              tags=(r.get("categories") or []) + (r.get("seniority") or []),
+              description=text(r.get("description") or r.get("excerpt")))
 
 
 def src_wwr(cfg, get: Get) -> list[Job]:
@@ -339,10 +371,28 @@ def src_lever(cfg, get: Get) -> list[Job]:
     return out
 
 
+def src_workable(cfg, get: Get) -> list[Job]:
+    out = []
+    for org in cfg["ats"].get("workable", []):
+        data = get_json(get, f"https://apply.workable.com/api/v1/widget/accounts/{org}?details=true")
+        rows: dict[str, list[dict]] = {}
+        for r in data.get("jobs", []):  # the widget returns one row per country: merge them
+            rows.setdefault(r["shortcode"], []).append(r)
+        for code, group in rows.items():
+            r = group[0]
+            countries = list(dict.fromkeys(g["country"] for g in group if g.get("country")))
+            remote = " (remote)" if r.get("telecommuting") else ""
+            out.append(mk("workable", "ats", f"{org}:{code}", title=r.get("title", ""),
+                          company=data.get("name") or org, location=", ".join(countries) + remote,
+                          url=r.get("url", ""), posted=iso_date(r.get("published_on")),
+                          description=text(r.get("description"))))
+    return out
+
+
 SOURCES: dict[str, Callable] = {
     "remoteok": src_remoteok, "himalayas": src_himalayas, "wwr": src_wwr, "remotive": src_remotive,
     "workingnomads": src_workingnomads, "jobicy": src_jobicy, "hn": src_hn, "habr": src_habr,
-    "greenhouse": src_greenhouse, "ashby": src_ashby, "lever": src_lever,
+    "greenhouse": src_greenhouse, "ashby": src_ashby, "lever": src_lever, "workable": src_workable,
 }
 # Which config key switches each source on (a truthy bool or a non-empty list).
 SOURCE_KEYS = {
@@ -351,6 +401,7 @@ SOURCE_KEYS = {
     "workingnomads": ("boards", "workingnomads"), "jobicy": ("boards", "jobicy_industries"),
     "hn": ("boards", "hn"), "habr": ("boards", "habr_queries"),
     "greenhouse": ("ats", "greenhouse"), "ashby": ("ats", "ashby"), "lever": ("ats", "lever"),
+    "workable": ("ats", "workable"),
 }
 
 
