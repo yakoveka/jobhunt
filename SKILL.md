@@ -25,7 +25,7 @@ Read the config first: `~/.config/jobhunt/config.toml` (or `$JOBHUNT_CONFIG`). I
 ## Hard rules
 1. **Never submit, email or message anyone.** Output is drafts in `HUNT`; the user sends.
 2. **Evidence only.** Every CV/cover-letter claim must trace to `cv-master.html` (`data-src`) or an [E] item in `PROFILE` (or an [I] item the profile explicitly clears). No new numbers, no inflated scope. If a listing wants something the user lacks, say so in `fit.md` → Gaps; never paper over it.
-3. **Follow `criteria.md` → CV rules** in every CV and cover letter (confidential employers, things never to state, location lines), and respect its hard-nos. Listings in another language the user works in (criteria.md → Languages) get the CV and cover letter in that language; everything else in English.
+3. **Follow `criteria.md` → CV rules** (and any CV or cover-letter shape rules there) in every CV and cover letter (confidential employers, things never to state, location lines), and respect its hard-nos. Listings in another language the user works in (criteria.md → Languages) get the CV and cover letter in that language; everything else in English.
 4. Only write inside `HUNT` (and, in `setup`, the profile files and the config). No secrets anywhere.
 
 ## setup
@@ -38,31 +38,33 @@ Goal: a working hunt dir whose profile, master CV and criteria are the user's ow
 6. **Stories** (`stories.md`): draft 6–10 STAR stories from the profile, numbered S1…, each claim marked [E]/[I]. Ask the user for missing results; mark the rest `TODO(ask)`.
 7. **Voice** (`voice.md`): describe their patterns from the writing samples (openers, sentence length, how they hedge, phrases they use and avoid) and write the rules. No samples → keep the template rules and say so.
 8. **Master CV** (`cv-master.html`): rebuild from the profile in the template's structure and classes. Include more than fits on a page (it's the menu), `data-src` on every bullet and the Profile paragraph, `opt` on the secondary bullets, headline and where-line variants as comments (one per role family / work mode from criteria.md). Contact details only as given in the profile.
-9. **Sources** (`sources.toml`): tune `stack` (their technologies and role words), `title_role`/`title_exclude` (families and hard-nos), `location_exclude`/`location_allow` (where they can and can't work), the board queries, `habr_queries` only if they work in Russian, and suggest 5–15 ATS companies in their field; check each feed URL returns jobs (WebFetch) before adding it. Keep filters loose.
+9. **Sources** (`sources.toml`): tune `stack` (their technologies and role words), `title_role`/`title_exclude` (families and hard-nos), `location_exclude`/`location_allow` (where they can and can't work), `himalayas_country` (their country code), the board queries, `habr_queries` only if they work in Russian, and suggest 5–15 ATS companies in their field; check each feed URL returns jobs (WebFetch) before adding it. Keep filters loose.
 10. **Verify**: `jobhunt.py fetch`. Report fetched / new per source. 0 new → filters too strict or a source error; > 600 new → too loose (the daily triage reads every row); adjust once and re-run. Then `jobhunt.py dashboard`.
 11. **Finish** with a short checklist: the `TODO(ask)` items left (with file and line); "review every line of profile.md and cv-master.html: the agent only knows what's written there"; try `/jobs draft <url>` on a real listing and read the result; when happy, schedule the daily run with `~/.claude/skills/jobs/install.sh` (SETUP.md → Schedule).
 
 ## daily
 1. Read `criteria.md`, the pipeline (application frontmatter), `PROFILE` (skills matrix, Corrections), then `STATE/new/<today>.tsv`. If it's missing and you can run Bash, run `jobhunt.py fetch`; else write the digest with "no fetch today" and stop.
-2. **Triage every row** of the TSV against the rubric (title/company/location/salary/snippet are enough for most). Shortlist ≤ 25 plausible ones and read their full listing: `Grep` the jsonl for the id (`"id": "<id>"`). Score each shortlisted listing 0–100 with a one-line why and red flags. Skip companies that already have an application folder dated in the last 60 days.
-3. **Draft the top 3–5 at or above the draft threshold** (criteria.md; fewer if fewer qualify). For each, create `HUNT/applications/<YYYY-MM-DD>-<company-slug>-<role-slug>/`:
+2. **Triage every row** of the TSV against the rubric (title/company/location/salary/snippet are enough for most). Shortlist ≤ 25 plausible ones and read their full listing: `Grep` the jsonl for the id (`"id": "<id>"`). Apply criteria.md → **Must-have gate** before scoring, and → **Ask first** to location near-misses (when criteria.md has those sections). Score each shortlisted listing 0–100 with a one-line why and red flags. Skip companies that already have an application folder dated in the last 60 days.
+3. **Draft the top 3–5 at or above the draft threshold that pass the must-have gate** (criteria.md; fewer if fewer qualify). Gate failures and "Ask first" listings are never drafted here. For each, create `HUNT/applications/<YYYY-MM-DD>-<company-slug>-<role-slug>/`:
    - `job.md`: frontmatter (`company, role, url, source, posted, salary, score, status: drafted, next_action: review + send, next_action_date: <today>, updated: <today>`) + the full listing text (listings disappear). This frontmatter **is** the pipeline entry.
    - `fit.md`: score breakdown; requirement → evidence table (cite `data-src` / profile section); **Gaps** + honest framing; which stories (S1…) to tell; likely screening questions with draft answers (incl. salary: criteria.md → Ready answers); red flags / questions to ask; **How to apply** (exact URL, what goes in which field, a 3–4 sentence "why me" for form boxes).
    - `cv.html`: copy `cv-master.html`, then tailor: headline + where-line variant, rewrite Profile for this listing, keep/reorder bullets so the listing's needs come first, drop irrelevant `opt` bullets, reorder Skills. Keep `data-src` attributes. Target 1 page (lead roles: up to 2). Mirror the listing's own terms where they are true.
-   - `cover-letter.html`: same `<style>` block as the CV; 180–280 words; follow `voice.md` (context first, concrete evidence, candid about one real gap, no AI tells); addressed to the company, names the role, ends with availability. Skip only if the listing forbids cover letters (then note it in fit.md).
+   - `cover-letter.html`: same `<style>` block as the CV; 180–280 words; follow `voice.md` (context first, concrete evidence, no AI tells); addressed to the company, names the role, ends with availability. No gap statements and no closing question about eligibility or location, even if `voice.md` says otherwise: gaps go in `fit.md` only. Skip only if the listing forbids cover letters (then note it in fit.md).
 4. Don't write pipeline rows anywhere: the `job.md` frontmatter from step 3 is the entry. Never edit `dashboard.md`.
-5. **Follow-ups**: from the application frontmatter, list ones where `next_action_date` ≤ today, or `sent` with `applied` > 7 days ago, or `interview` > 5 working days without `updated` changing. For each, draft a 2–4 sentence follow-up message inside the digest.
+5. **Follow-ups**: follow criteria.md → **Follow-ups**. Without that section: list ones where `next_action_date` ≤ today, or `sent` with `applied` > 7 days ago. Either way, list `screen`/`interview` ones with `next_action_date` ≤ today or > 5 working days without `updated` changing. For each, draft a 2–4 sentence follow-up message inside the digest.
 6. Write `HUNT/daily/<YYYY-MM-DD>.md`:
    ```
    ---
    updated: <today>
-   tags: [job-hunt]
+   tags: [job-hunt]   (if criteria.md's frontmatter has `type` or other tags, copy them)
    ---
    # Jobs — <today>
    **<new> new · <shortlisted> shortlisted · <drafted> drafted · <due> follow-ups due**
    ## Do today        (numbered: review+send each draft with its link; send each follow-up)
    ## Drafted          (table: score | company | role | where/pay | folder link)
    ## Next up (≥ threshold, not drafted)   (table, max 10; one line why)
+   ## Ask first        (location near-misses per criteria.md: company | role | why it fits | the 3-sentence message to send)
+   ## Stretch (warm intro only)     (≥ threshold but fails the must-have gate: company | role | the requirement it fails; max 5)
    ## Worth a look (55 to threshold)       (table, max 10)
    ## Follow-ups       (row + drafted message)
    ## Skipped          (one line: counts by reason, e.g. "312 off-target title (prefilter), 40 hard-no location, …")
@@ -80,10 +82,10 @@ Write `HUNT/market/<YYYY>-W<ww>.md` (same frontmatter style):
 - **Proposals** (never applied automatically): concrete `sources.toml` diffs (new ATS orgs to verify, with the feed URL; orgs to drop; filter tweaks), `criteria.md` rubric tweaks, `cv-master.html` improvements, profile gaps worth fixing (e.g. a cert, a public repo). The user approves in an interactive session.
 
 ## draft <url>
-Fetch the listing (WebFetch, or `curl -sL <url>` and strip HTML), score it with the rubric, and produce the same folder as daily step 3 even if the score is below the threshold (the user asked). Its `job.md` frontmatter is the pipeline entry. Print the folder path.
+Fetch the listing (WebFetch, or `curl -sL <url>` and strip HTML), score it with the rubric, and produce the same folder as daily step 3 even if the score is below the threshold or the must-have gate fails (the user asked; name the failed requirement at the top of `fit.md`). Its `job.md` frontmatter is the pipeline entry. Print the folder path.
 
 ## Status updates the user reports ("Acme replied", "rejected by X", "sent Y")
-Edit that application's `job.md` frontmatter: `status`, `updated: <today>`; on `sent` set `applied: <today>` (or the date given) and `next_action: follow up if silent` + `next_action_date` = applied + 7; on `screen`/`interview`/`offer` also raise `reached`; on `rejected`/`ghosted`/`withdrawn` keep `reached` and remove `next_action*`. A company with no folder gets a stub `applications/<date>-<company>-<role>/job.md` (frontmatter + a short body). Then run `jobhunt.py dashboard` if you can run Bash.
+Edit that application's `job.md` frontmatter: `status`, `updated: <today>`; on `sent` set `applied: <today>` (or the date given) and `next_action` / `next_action_date` per criteria.md → Follow-ups (without that section: `follow up if silent`, applied + 7); on `screen`/`interview`/`offer` also raise `reached`; on `rejected`/`ghosted`/`withdrawn` keep `reached` and remove `next_action*`. A company with no folder gets a stub `applications/<date>-<company>-<role>/job.md` (frontmatter + a short body). Then run `jobhunt.py dashboard` if you can run Bash.
 
 ## status
 If you can run Bash, run `jobhunt.py dashboard` first. Read `dashboard.md`, the latest `daily/` digest and the last `runs.jsonl` line. Reply in ≤ 10 bullets: counts by status, follow-ups due today, drafts waiting > 2 days, last fetch health, days left to `goal.deadline`.

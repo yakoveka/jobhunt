@@ -32,6 +32,21 @@ tags:
 - Clearly below the floor
 - Application processes you refuse (e.g. recorded video, unpaid take-home over 4 hours)
 
+## Must-have gate (cold applications)
+Cold applications rarely get past a screener when the CV can't show a stated requirement. Check the gate **before** scoring: a listing that fails is **not drafted**, whatever it would score; the digest lists it under "Stretch (warm intro only)" with the requirement it fails. `/jobs draft <url>` still drafts it when you ask (e.g. you have a contact there).
+
+A listing fails when it states as **required** (not "nice to have" or "a plus") something your profile can't show on paper. Examples:
+- **Years in its primary language or framework** above what your role dates evidence. "5+ years of Python" fails at 4 years; "5+ years of backend, Python preferred" passes
+- **People management** (Manager, Head of, Director titles, or "2+ years managing people") when you haven't managed people
+- **A required technology or domain with no [E] evidence**, e.g. Kubernetes in production, Go as the primary language
+
+A requirement worded as optional doesn't fail the gate; it stays a −5 gap in the score.
+
+## Ask first (location near-misses)
+- **When**: the listing passes the must-have gate, would score ≥ 75 but for location, and its location is a country or region list that leaves yours out **without** saying "no sponsorship" or "must already have the right to work"
+- **Then**: no draft. The digest lists it under "Ask first" with a 3-sentence message for the recruiter: where you're based, how you can be hired (e.g. contract or an employer-of-record), does that work for this role? You send it; ask for the draft after a yes
+- An explicit "no sponsorship", "must already have the right to work" or citizenship requirement stays a hard no
+
 ## Score (0–100)
 Start at 50, then adjust:
 - **Stack match** with the Strong skills in your profile's skills matrix: +0…+25
@@ -42,7 +57,10 @@ Start at 50, then adjust:
 - **Gaps** that would surface in screening: −5 each
 - **Already applied** to the same company in the last 60 days: skip (note it)
 
-**Draft threshold**: ≥ 70. Draft the top 3–5 per day (fewer if fewer pass); list the 70+ leftovers as "next up".
+**Draft threshold**: ≥ 70 **and** passes the must-have gate. Draft the top 3–5 per day (fewer if fewer pass); list the 70+ leftovers as "next up".
+
+## Follow-ups
+Your policy for applications that went quiet. Example: "follow up once, 7 days after sending; silent 21 days after that = `ghosted`". Or: "no follow-ups on form submissions; silent 21 days = `ghosted`".
 
 ## CV rules (non-negotiable)
 Rules the agent must follow in every CV and cover letter. Examples:
