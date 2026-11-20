@@ -1,8 +1,8 @@
 ---
 name: jobs
-description: Job-hunt assistant. `setup` builds your profile, master CV and targeting from your existing CV and a short interview; `daily` scores the day's fetched listings against criteria.md, writes a ranked digest and fully drafts the top 3–5 applications (tailored CV, cover letter, fit notes); `weekly` reviews the funnel and market and proposes targeting changes; `draft <url>` drafts one application from any listing; `status` summarises the pipeline. Never submits anything.
-when_to_use: User says "/jobs", "/jobs setup|daily|weekly|status", "set up the job hunt", "draft an application for <url>", "score this job", "what's in my pipeline", "follow-ups due". The daily/weekly runs are also launched headless by run-daily.sh (launchd).
-argument-hint: "setup | daily | weekly | draft <url> | status"
+description: Job-hunt assistant. `setup` builds your profile, master CV and targeting from your existing CV and a short interview; `daily` scores the day's fetched listings against criteria.md, writes a ranked digest and fully drafts the top 3–5 applications (tailored CV, cover letter, fit notes); `weekly` reviews the funnel and market and proposes targeting changes; `draft <url>` drafts one application from any listing; `answers <application>` drafts evidence-backed answers to an application form's questions; `status` summarises the pipeline. Never submits anything.
+when_to_use: User says "/jobs", "/jobs setup|daily|weekly|status", "set up the job hunt", "draft an application for <url>", "score this job", "/jobs answers <company>", "answer these form questions", "what's in my pipeline", "follow-ups due". The daily/weekly runs are also launched headless by run-daily.sh (launchd).
+argument-hint: "setup | daily | weekly | draft <url> | answers <application> | status"
 model: opus
 effort: high
 allowed-tools: Read Edit Write Grep Glob WebFetch WebSearch AskUserQuestion Bash(python3 ~/.claude/skills/jobs/jobhunt.py *) Bash(curl -sL *)
@@ -84,7 +84,17 @@ Write `HUNT/market/<YYYY>-W<ww>.md` (same frontmatter style):
 ## draft <url>
 Fetch the listing (WebFetch, or `curl -sL <url>` and strip HTML), score it with the rubric, and produce the same folder as daily step 3 even if the score is below the threshold or the must-have gate fails (the user asked; name the failed requirement at the top of `fit.md`). Its `job.md` frontmatter is the pipeline entry. Print the folder path.
 
+## answers <application>
+Draft answers to an application form's questions. Input: the application folder (or a company name: find its folder under `applications/`) plus the questions, as a pasted list or a screenshot. No folder → ask for the listing URL and run `draft <url>` first.
+1. Read that application's `job.md` and `fit.md` (incl. any earlier **Form answers**: stay consistent with them), `PROFILE` (Corrections, stories), `cv-master.html`, criteria.md → **Ready answers** (salary, notice, availability) and → CV rules, and `voice.md`.
+2. Answer each question from those sources only (hard rule 2). If a question can't be answered from them, say so and write a `TODO(<what's missing>)` placeholder instead of an answer; never make one up.
+3. Respect each field's character limit (read it from the screenshot or the list); with no limit, 2–4 sentences. Answer in the language the form or recruiter uses.
+4. Output, per question: the question, then the answer as a plain paragraph or a code block ready to paste, with its character count (e.g. `412/500 chars`). No blockquotes and no Markdown inside the answers.
+5. Append the final answers to that application's `fit.md` under `## Form answers` with a `### <today>` heading (create the section if missing; never rewrite earlier entries).
+Never fill in or submit the form (hard rule 1).
+
 ## Status updates the user reports ("Acme replied", "rejected by X", "sent Y")
+`status` must be one of the allowed values above; anything else drops the application from Pipeline.base, the dashboard and the follow-ups (the dashboard lists it under "Needs action" as needs fixing). "Applied", "submitted", "mark as applied" and "sent" all mean `status: sent` + `applied: <date>`.
 Edit that application's `job.md` frontmatter: `status`, `updated: <today>`; on `sent` set `applied: <today>` (or the date given) and `next_action` / `next_action_date` per criteria.md → Follow-ups (without that section: `follow up if silent`, applied + 7); on `screen`/`interview`/`offer` also raise `reached`; on `rejected`/`ghosted`/`withdrawn` keep `reached` and remove `next_action*`. A company with no folder gets a stub `applications/<date>-<company>-<role>/job.md` (frontmatter + a short body). Then run `jobhunt.py dashboard` if you can run Bash.
 
 ## status

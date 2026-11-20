@@ -510,6 +510,7 @@ def write_tsv(tsv: Path, jsonl: Path) -> None:
 STAGES = ("screen", "interview", "offer")          # progress after sending, in order
 SENT_PLUS = {"sent", "rejected", "ghosted", "withdrawn", *STAGES}
 OPEN = {"sent", *STAGES}
+STATUSES = ("drafted", "sent", *STAGES, "rejected", "ghosted", "withdrawn", "skipped")
 OUTCOME_NODE = {"rejected": "Rejected", "ghosted": "Ghosted", "withdrawn": "Withdrawn"}
 
 
@@ -632,6 +633,8 @@ def render_dashboard(rows: list[dict], today: dt.date, goal: dict) -> str:
             for r in m["followups"]]
     todo += [f"- {_link(r)}: silent since {r['applied']} → mark `ghosted` or follow up" for r in m["ghost_candidates"]]
     todo += [f"- {_link(r)}: draft waiting since {r['dir'][:10]} → send or skip" for r in m["stale_drafts"]]
+    todo += [f"- {_link(r)}: needs fixing: status `{r.get('status', '')}` is not one of {', '.join(STATUSES)}"
+             for r in rows if r.get("status") not in STATUSES]
     return f"""---
 type: career
 updated: {today.isoformat()}

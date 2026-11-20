@@ -477,6 +477,13 @@ class TestDashboard(unittest.TestCase):
         self.assertIn("Days to 2026-12-31", md)
         self.assertIn("pace (15/week)", md)
 
+    def test_dashboard_reports_off_list_status_without_rewriting_it(self):
+        bad = app_note(self.apps, "2026-11-02-x", company="X", status="applied", applied="2026-11-02")
+        out = self.apps / "dashboard.md"
+        jh.dashboard(self.apps, out, DASH_TODAY, GOAL)
+        self.assertIn("[X](applications/2026-11-02-x/job.md): needs fixing: status `applied`", out.read_text())
+        self.assertIn("status: applied", bad.read_text())
+
 
 class TestConfig(unittest.TestCase):
     def setUp(self):

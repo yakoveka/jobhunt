@@ -99,7 +99,7 @@ python3 ~/.claude/skills/jobs/jobhunt.py render
 ## Daily routine
 
 1. Open `daily/<today>.md` from the notification.
-2. For each draft: skim `fit.md`, check `cv.pdf` / `cover-letter.pdf`, and apply using the "How to apply" section. Then set `status: sent` in its `job.md`, or tell `/jobs` "sent Acme", or drag the card in Obsidian.
+2. For each draft: skim `fit.md`, check `cv.pdf` / `cover-letter.pdf`, and apply using the "How to apply" section (form questions: `/jobs answers <company>` with the questions or a screenshot). Then set `status: sent` in its `job.md`, or tell `/jobs` "sent Acme", or drag the card in Obsidian.
 3. Send the follow-ups drafted in the digest. When anyone replies, update the status (`screen`, `interview`, `rejected`, …).
 4. On Mondays, read `market/<week>.md` and tell `/jobs` which proposals to apply.
 5. `/jobs status` gives you a summary at any time. `dashboard.md` has the charts.
