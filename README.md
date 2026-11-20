@@ -28,7 +28,7 @@ flowchart LR
 ```
 
 - `jobhunt.py`: stdlib-only Python. It fetches, prefilters, dedupes, renders PDFs and builds the dashboard. It never judges fit.
-- `SKILL.md`: the `/jobs` Claude Code skill that does the judging and writing (`setup`, `daily`, `weekly`, `draft <url>`, `status`).
+- `SKILL.md`: the `/jobs` Claude Code skill that does the judging and writing (`setup`, `daily`, `weekly`, `draft <url>`, `answers <application>`, `status`).
 - `run-daily.sh` + `install.sh`: the daily schedule (launchd).
 - `templates/`: what your hunt dir starts from, filled with an example persona.
 
@@ -43,13 +43,15 @@ Your data lives in a **hunt dir** that you choose, outside this repo. Nothing pe
   criteria.md            goal, pay floor, role families, hard-nos, scoring rubric, CV rules, ready answers
   sources.toml           which boards/companies to fetch and the loose prefilter
   daily/                 one digest per day
-  applications/<date>-<company>-<role>/   job.md (tracker entry), fit.md, cv.html/.pdf, cover-letter.html/.pdf
+  applications/<date>-<company>-<role>/   job.md (tracker entry), fit.md (incl. form answers), cv.html/.pdf, cover-letter.html/.pdf
   market/                weekly reviews
   dashboard.md           generated KPIs, charts, what needs action
   Pipeline.base          Obsidian Kanban/table views (optional)
 ```
 
-The tracker is the frontmatter of each `applications/*/job.md` (`status: drafted → sent → screen → interview → offer | rejected | ghosted | withdrawn | skipped`). Tell `/jobs` "sent Acme" or "rejected by X" and it updates it, or edit the file yourself, or drag cards in Obsidian.
+The tracker is the frontmatter of each `applications/*/job.md` (`status: drafted → sent → screen → interview → offer | rejected | ghosted | withdrawn | skipped`). Tell `/jobs` "sent Acme" or "rejected by X" and it updates it, or edit the file yourself, or drag cards in Obsidian. Any other status value drops the application from the views and metrics, so `dashboard.md` lists it under "Needs action" until you fix it.
+
+For the free-text questions on an application form, run `/jobs answers <company>` with the questions pasted or as a screenshot: it drafts answers from your evidence within each field's character limit, shows the character counts, and saves them to that application's `fit.md` so later answers stay consistent.
 
 ## Sources
 
