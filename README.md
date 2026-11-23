@@ -42,6 +42,7 @@ Your data lives in a **hunt dir** that you choose, outside this repo. Nothing pe
   cv-master.html         superset CV: every bullet carries data-src provenance
   criteria.md            goal, pay floor, role families, hard-nos, scoring rubric, CV rules, ready answers
   sources.toml           which boards/companies to fetch and the loose prefilter
+  inbox.md               your notes on the day ("applied to Acme", "rejected by X"); the next daily run applies them
   daily/                 one digest per day
   applications/<date>-<company>-<role>/   job.md (tracker entry), fit.md (incl. form answers), cv.html/.pdf, cover-letter.html/.pdf
   market/                weekly reviews
@@ -49,7 +50,7 @@ Your data lives in a **hunt dir** that you choose, outside this repo. Nothing pe
   Pipeline.base          Obsidian Kanban/table views (optional)
 ```
 
-The tracker is the frontmatter of each `applications/*/job.md` (`status: drafted → sent → screen → interview → offer | rejected | ghosted | withdrawn | skipped`). Tell `/jobs` "sent Acme" or "rejected by X" and it updates it, or edit the file yourself, or drag cards in Obsidian. Any other status value drops the application from the views and metrics, so `dashboard.md` lists it under "Needs action" until you fix it.
+The tracker is the frontmatter of each `applications/*/job.md` (`status: drafted → sent → screen → interview → offer | rejected | ghosted | withdrawn | skipped`). Tell `/jobs` "sent Acme" or "rejected by X" and it updates it, jot it in `inbox.md` for the next morning's run, or edit the file yourself, or drag cards in Obsidian. Any other status value drops the application from the views and metrics, so `dashboard.md` lists it under "Needs action" until you fix it.
 
 For the free-text questions on an application form, run `/jobs answers <company>` with the questions pasted or as a screenshot: it drafts answers from your evidence within each field's character limit, shows the character counts, and saves them to that application's `fit.md` so later answers stay consistent.
 

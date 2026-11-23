@@ -1,7 +1,7 @@
 ---
 name: jobs
-description: Job-hunt assistant. `setup` builds your profile, master CV and targeting from your existing CV and a short interview; `daily` scores the day's fetched listings against criteria.md, writes a ranked digest and fully drafts the top 3–5 applications (tailored CV, cover letter, fit notes); `weekly` reviews the funnel and market and proposes targeting changes; `draft <url>` drafts one application from any listing; `answers <application>` drafts evidence-backed answers to an application form's questions; `status` summarises the pipeline. Never submits anything.
-when_to_use: User says "/jobs", "/jobs setup|daily|weekly|status", "set up the job hunt", "draft an application for <url>", "score this job", "/jobs answers <company>", "answer these form questions", "what's in my pipeline", "follow-ups due". The daily/weekly runs are also launched headless by run-daily.sh (launchd).
+description: Job-hunt assistant. `setup` builds your profile, master CV and targeting from your existing CV and a short interview; `daily` applies the user's `inbox.md` notes (applied/rejected/replies) to the pipeline, scores the day's fetched listings against criteria.md, writes a ranked digest and fully drafts the top 3–5 applications (tailored CV, cover letter, fit notes); `weekly` reviews the funnel and market and proposes targeting changes; `draft <url>` drafts one application from any listing; `answers <application>` drafts evidence-backed answers to an application form's questions; `status` summarises the pipeline. Never submits anything.
+when_to_use: User says "/jobs", "/jobs setup|daily|weekly|status", "set up the job hunt", "draft an application for <url>", "score this job", "/jobs answers <company>", "answer these form questions", "what's in my pipeline", "follow-ups due", "process the inbox". The daily/weekly runs are also launched headless by run-daily.sh (launchd).
 argument-hint: "setup | daily | weekly | draft <url> | answers <application> | status"
 model: opus
 effort: high
@@ -14,7 +14,7 @@ Arguments: $ARGUMENTS (default `status`; if the config below doesn't exist, run 
 
 ## Paths
 Read the config first: `~/.config/jobhunt/config.toml` (or `$JOBHUNT_CONFIG`). It gives:
-- `HUNT` = `hunt_dir`. Quote paths, they may contain spaces. Inside: `criteria.md` (preferences, rubric, CV rules), `sources.toml` (fetch sources + prefilter), `cv-master.html` (superset CV with provenance), `daily/`, `applications/`, `market/`, `Pipeline.base` (Obsidian views), `dashboard.md` (generated: never edit)
+- `HUNT` = `hunt_dir`. Quote paths, they may contain spaces. Inside: `criteria.md` (preferences, rubric, CV rules), `sources.toml` (fetch sources + prefilter), `cv-master.html` (superset CV with provenance), `inbox.md` (the user's notes on what happened: see **Inbox**), `daily/`, `applications/`, `market/`, `Pipeline.base` (Obsidian views), `dashboard.md` (generated: never edit)
 - `PROFILE` = the `profile` globs, relative to `HUNT` (default `profile/*.md`: `profile.md`, `stories.md`, `voice.md`). The only source of facts about the user. Read its **Corrections** section every time
 - `[goal]`: `start`, `deadline`, `per_week` (dashboard pace and "days left")
 - `STATE` = `~/.local/state/jobhunt/`: `new/<date>.tsv` (one row per new listing), `new/<date>.jsonl` (full listings), `runs.jsonl` (per-source fetch stats)
@@ -43,7 +43,7 @@ Goal: a working hunt dir whose profile, master CV and criteria are the user's ow
 11. **Finish** with a short checklist: the `TODO(ask)` items left (with file and line); "review every line of profile.md and cv-master.html: the agent only knows what's written there"; try `/jobs draft <url>` on a real listing and read the result; when happy, schedule the daily run with `~/.claude/skills/jobs/install.sh` (SETUP.md → Schedule).
 
 ## daily
-1. Read `criteria.md`, the pipeline (application frontmatter), `PROFILE` (skills matrix, Corrections), then `STATE/new/<today>.tsv`. If it's missing and you can run Bash, run `jobhunt.py fetch`; else write the digest with "no fetch today" and stop.
+1. Read `criteria.md`, the pipeline (application frontmatter), `PROFILE` (skills matrix, Corrections), then `STATE/new/<today>.tsv`. If it's missing and you can run Bash, run `jobhunt.py fetch`; else write the digest with "no fetch today" and stop. Before triage, process `inbox.md` (see **Inbox**) so the pipeline you score against is current.
 2. **Triage every row** of the TSV against the rubric (title/company/location/salary/snippet are enough for most). Shortlist ≤ 25 plausible ones and read their full listing: `Grep` the jsonl for the id (`"id": "<id>"`). Apply criteria.md → **Must-have gate** before scoring, and → **Ask first** to location near-misses (when criteria.md has those sections). Score each shortlisted listing 0–100 with a one-line why and red flags. Skip companies that already have an application folder dated in the last 60 days.
 3. **Draft the top 3–5 at or above the draft threshold that pass the must-have gate** (criteria.md; fewer if fewer qualify). Gate failures and "Ask first" listings are never drafted here. For each, create `HUNT/applications/<YYYY-MM-DD>-<company-slug>-<role-slug>/`:
    - `job.md`: frontmatter (`company, role, url, source, posted, salary, score, status: drafted, next_action: review + send, next_action_date: <today>, updated: <today>`) + the full listing text (listings disappear). This frontmatter **is** the pipeline entry.
@@ -60,7 +60,8 @@ Goal: a working hunt dir whose profile, master CV and criteria are the user's ow
    ---
    # Jobs — <today>
    **<new> new · <shortlisted> shortlisted · <drafted> drafted · <due> follow-ups due**
-   ## Do today        (numbered: review+send each draft with its link; send each follow-up)
+   ## Do today        (numbered: review+send each draft with its link; send each follow-up; answer each `→ ?` inbox line)
+   ## Inbox            (one line per processed inbox entry: what changed, with the folder link; then the lines left with `→ ?`; omit if the inbox was empty)
    ## Drafted          (table: score | company | role | where/pay | folder link)
    ## Next up (≥ threshold, not drafted)   (table, max 10; one line why)
    ## Ask first        (location near-misses per criteria.md: company | role | why it fits | the 3-sentence message to send)
@@ -96,6 +97,13 @@ Never fill in or submit the form (hard rule 1).
 ## Status updates the user reports ("Acme replied", "rejected by X", "sent Y")
 `status` must be one of the allowed values above; anything else drops the application from Pipeline.base, the dashboard and the follow-ups (the dashboard lists it under "Needs action" as needs fixing). "Applied", "submitted", "mark as applied" and "sent" all mean `status: sent` + `applied: <date>`.
 Edit that application's `job.md` frontmatter: `status`, `updated: <today>`; on `sent` set `applied: <today>` (or the date given) and `next_action` / `next_action_date` per criteria.md → Follow-ups (without that section: `follow up if silent`, applied + 7); on `screen`/`interview`/`offer` also raise `reached`; on `rejected`/`ghosted`/`withdrawn` keep `reached` and remove `next_action*`. A company with no folder gets a stub `applications/<date>-<company>-<role>/job.md` (frontmatter + a short body). Then run `jobhunt.py dashboard` if you can run Bash.
+
+## Inbox (`HUNT/inbox.md`)
+The user writes free-text lines under `## New` during the day ("applied to Acme", "rejected by Globex", "Initech call Thu 15:00"). `daily` processes them first; so does any interactive request to "process the inbox". No `inbox.md` → nothing to do (don't create one).
+1. For each line under `## New`, find the application: match the company in `applications/*/job.md` (several folders for one company → the one the role words match, else the most recent open one). Lines about a company with no folder that report an application or a reply get the stub from **Status updates**.
+2. Apply it as a status update (section above). The date is the one in the line, or the nearest `### YYYY-MM-DD` heading above it; without either, use yesterday in `daily` (the user wrote it the day before) and today interactively. A scheduled call or interview → `screen`/`interview` with `next_action` naming it and `next_action_date` = its date. Anything else useful (a recruiter's name, salary they quoted, feedback) → append to that application's `fit.md` under `## Notes` with the date.
+3. Move each handled line from `## New` to the top of `## Processed` as `- <today>: <the line as written> → <what you changed> ([<folder>](applications/<folder>/job.md))`. Never rewrite or drop the user's words.
+4. A line you can't act on (no matching application and not an application/reply, ambiguous company, unclear outcome) stays under `## New` with ` → ? <what you need>` appended (replace an earlier `→ ?` note, don't stack them). Preference changes ("no more gambling companies") are never applied to `criteria.md` or `sources.toml`: move the line to `## Processed` with `→ proposal in digest` and put the concrete diff in the digest's Inbox section.
 
 ## status
 If you can run Bash, run `jobhunt.py dashboard` first. Read `dashboard.md`, the latest `daily/` digest and the last `runs.jsonl` line. Reply in ≤ 10 bullets: counts by status, follow-ups due today, drafts waiting > 2 days, last fetch health, days left to `goal.deadline`.
